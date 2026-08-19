@@ -56,8 +56,8 @@ export function Board({
     return null;
   }
 
-  const myTasks = tasks.filter((t) => t.assignee_id === currentUser.id);
-  const unassignedTasks = tasks.filter((t) => t.assignee_id === null);
+  const myTasks = tasks.filter((t) => t.assignee_ids.includes(currentUser.id));
+  const unassignedTasks = tasks.filter((t) => t.assignee_ids.length === 0);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
@@ -80,7 +80,7 @@ export function Board({
           <MemberSection
             key={member.id}
             memberName={member.display_name}
-            tasks={tasks.filter((t) => t.assignee_id === member.id)}
+            tasks={tasks.filter((t) => t.assignee_ids.includes(member.id))}
             canEdit={isAdmin || member.id === currentUser.id}
             onStatusChange={handleStatusChange}
           />

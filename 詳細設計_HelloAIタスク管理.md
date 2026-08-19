@@ -28,7 +28,7 @@
 | id | uuid PK | |
 | title | text | NOT NULL |
 | description | text | |
-| assignee_id | uuid FK → profiles.id | null許容（未割当） |
+| assignee_ids | uuid[] | 複数担当者。空配列で未割当（DBレベルのFK制約は配列要素には張れないため参照整合性はアプリ層で担保） |
 | created_by | uuid FK → profiles.id | |
 | due_at | timestamptz | null許容 |
 | status | text | `todo` / `in_progress` / `done`、default `todo` |

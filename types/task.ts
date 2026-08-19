@@ -12,7 +12,7 @@ export interface Task {
   id: string;
   title: string;
   description: string | null;
-  assignee_id: string | null;
+  assignee_ids: string[];
   created_by: string | null;
   due_at: string | null;
   status: TaskStatus;
@@ -21,7 +21,7 @@ export interface Task {
 }
 
 export interface TaskWithAssignee extends Task {
-  assignee: Pick<Profile, "id" | "display_name"> | null;
+  assignees: Pick<Profile, "id" | "display_name">[];
 }
 
 export interface ApiResponse<T> {
@@ -32,12 +32,12 @@ export interface ApiResponse<T> {
 export interface CreateTaskInput {
   title: string;
   description?: string | null;
-  assignee_id?: string | null;
+  assignee_ids?: string[];
   due_at?: string | null;
 }
 
 export interface UpdateTaskInput {
   status?: TaskStatus;
-  assignee_id?: string | null;
+  assignee_ids?: string[];
   due_at?: string | null;
 }

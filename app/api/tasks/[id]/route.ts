@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth/getSessionProfile";
-import type { ApiResponse, TaskWithAssignee, UpdateTaskInput } from "@/types/task";
+import { attachAssignees } from "@/lib/tasks/withAssignees";
+import type { ApiResponse, Task, TaskWithAssignee, UpdateTaskInput } from "@/types/task";
 
 const STATUS_VALUES = ["todo", "in_progress", "done"];
+
+function parseAssigneeIds(value: unknown): string[] | null {
+  if (!Array.isArray(value) || !value.every((v) => typeof v === "string")) return null;
+  return [...new Set(value)];
+}
 
 export async function PATCH(
   request: Request,
@@ -20,7 +26,7 @@ export async function PATCH(
 
   const { data: existing, error: fetchError } = await supabase
     .from("tasks")
-    .select("id, assignee_id")
+    .select("id, assignee_ids")
     .eq("id", id)
     .maybeSingle();
 
@@ -39,7 +45,7 @@ export async function PATCH(
   }
 
   const isAdmin = profile.role === "admin";
-  const isAssignee = existing.assignee_id === user.id;
+  const isAssignee = (existing.assignee_ids as string[]).includes(user.id);
 
   if (!isAdmin && !isAssignee) {
     return NextResponse.json<ApiResponse<null>>(
@@ -50,9 +56,9 @@ export async function PATCH(
 
   const body = (await request.json()) as UpdateTaskInput;
 
-  if (!isAdmin && ("assignee_id" in body || "due_at" in body)) {
+  if (!isAdmin && ("assignee_ids" in body || "due_at" in body)) {
     return NextResponse.json<ApiResponse<null>>(
-      { data: null, error: "only admin can change assignee or due date" },
+      { data: null, error: "only admin can change assignees or due date" },
       { status: 403 },
     );
   }
@@ -66,14 +72,24 @@ export async function PATCH(
 
   const updateFields: UpdateTaskInput = {};
   if (body.status !== undefined) updateFields.status = body.status;
-  if (isAdmin && body.assignee_id !== undefined) updateFields.assignee_id = body.assignee_id;
+
+  if (isAdmin && body.assignee_ids !== undefined) {
+    const assigneeIds = parseAssigneeIds(body.assignee_ids);
+    if (assigneeIds === null) {
+      return NextResponse.json<ApiResponse<null>>(
+        { data: null, error: "assignee_ids must be an array of strings" },
+        { status: 400 },
+      );
+    }
+    updateFields.assignee_ids = assigneeIds;
+  }
   if (isAdmin && body.due_at !== undefined) updateFields.due_at = body.due_at;
 
   const { data, error } = await supabase
     .from("tasks")
     .update(updateFields)
     .eq("id", id)
-    .select("*, assignee:profiles!tasks_assignee_id_fkey(id, display_name)")
+    .select("*")
     .single();
 
   if (error) {
@@ -83,8 +99,14 @@ export async function PATCH(
     );
   }
 
+  const task = data as Task;
+  const { data: profiles } =
+    task.assignee_ids.length > 0
+      ? await supabase.from("profiles").select("id, display_name").in("id", task.assignee_ids)
+      : { data: [] };
+
   return NextResponse.json<ApiResponse<TaskWithAssignee>>({
-    data: data as unknown as TaskWithAssignee,
+    data: attachAssignees([task], profiles ?? [])[0],
     error: null,
   });
 }
