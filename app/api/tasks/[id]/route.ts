@@ -20,7 +20,7 @@ export async function PATCH(
 
   const { data: existing, error: fetchError } = await supabase
     .from("tasks")
-    .select("id, assignee_id")
+    .select("id, assignee_id, start_at, due_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -50,10 +50,37 @@ export async function PATCH(
 
   const body = (await request.json()) as UpdateTaskInput;
 
-  if (!isAdmin && ("assignee_id" in body || "due_at" in body)) {
+  if (!isAdmin && ("assignee_id" in body || "start_at" in body || "due_at" in body || "estimated_hours" in body)) {
     return NextResponse.json<ApiResponse<null>>(
       { data: null, error: "only admin can change assignee or due date" },
       { status: 403 },
+    );
+  }
+
+  if (
+    body.estimated_hours !== undefined &&
+    body.estimated_hours !== null &&
+    (!Number.isFinite(body.estimated_hours) || body.estimated_hours < 0)
+  ) {
+    return NextResponse.json<ApiResponse<null>>(
+      { data: null, error: "estimated_hours must be a non-negative number" },
+      { status: 400 },
+    );
+  }
+
+  const effectiveStartAt = body.start_at !== undefined ? body.start_at : existing.start_at;
+  const effectiveDueAt = body.due_at !== undefined ? body.due_at : existing.due_at;
+  const effectiveStartTime = effectiveStartAt ? new Date(effectiveStartAt).getTime() : null;
+  const effectiveDueTime = effectiveDueAt ? new Date(effectiveDueAt).getTime() : null;
+
+  if (
+    (effectiveStartTime !== null && !Number.isFinite(effectiveStartTime)) ||
+    (effectiveDueTime !== null && !Number.isFinite(effectiveDueTime)) ||
+    (effectiveStartTime !== null && effectiveDueTime !== null && effectiveStartTime > effectiveDueTime)
+  ) {
+    return NextResponse.json<ApiResponse<null>>(
+      { data: null, error: "start_at must be before due_at" },
+      { status: 400 },
     );
   }
 
@@ -67,7 +94,11 @@ export async function PATCH(
   const updateFields: UpdateTaskInput = {};
   if (body.status !== undefined) updateFields.status = body.status;
   if (isAdmin && body.assignee_id !== undefined) updateFields.assignee_id = body.assignee_id;
+  if (isAdmin && body.start_at !== undefined) updateFields.start_at = body.start_at;
   if (isAdmin && body.due_at !== undefined) updateFields.due_at = body.due_at;
+  if (isAdmin && body.estimated_hours !== undefined) {
+    updateFields.estimated_hours = body.estimated_hours;
+  }
 
   const { data, error } = await supabase
     .from("tasks")

@@ -13,6 +13,7 @@ import { MemberSection } from "./MemberSection";
 import { UnassignedSection } from "./UnassignedSection";
 import { CreateTaskButton } from "./CreateTaskButton";
 import { CreateTaskModal } from "./CreateTaskModal";
+import { TaskScheduleView } from "./TaskScheduleView";
 
 export function Board({
   initialTasks,
@@ -65,6 +66,8 @@ export function Board({
         <h2 className="text-lg font-bold text-gray-900">ボード</h2>
         <CreateTaskButton onClick={() => setModalOpen(true)} />
       </div>
+
+      <TaskScheduleView tasks={tasks} />
 
       <MyTasksSection tasks={myTasks} onStatusChange={handleStatusChange} />
 

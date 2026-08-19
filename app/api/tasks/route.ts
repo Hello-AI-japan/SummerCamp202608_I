@@ -42,10 +42,28 @@ export async function POST(request: Request) {
 
   const body = (await request.json()) as CreateTaskInput;
   const title = body.title?.trim();
+  const estimatedHours = body.estimated_hours;
+  const startAt = body.start_at ?? null;
+  const dueAt = body.due_at ?? null;
+  const startTime = startAt ? new Date(startAt).getTime() : null;
+  const dueTime = dueAt ? new Date(dueAt).getTime() : null;
 
   if (!title || title.length > 200) {
     return NextResponse.json<ApiResponse<null>>(
       { data: null, error: "title is required (max 200 chars)" },
+      { status: 400 },
+    );
+  }
+
+  if (
+    (estimatedHours !== undefined && estimatedHours !== null &&
+      (!Number.isFinite(estimatedHours) || estimatedHours < 0)) ||
+    (startAt && startTime !== null && !Number.isFinite(startTime)) ||
+    (dueAt && dueTime !== null && !Number.isFinite(dueTime)) ||
+    (startTime !== null && dueTime !== null && startTime > dueTime)
+  ) {
+    return NextResponse.json<ApiResponse<null>>(
+      { data: null, error: "invalid task schedule or estimated hours" },
       { status: 400 },
     );
   }
@@ -56,7 +74,9 @@ export async function POST(request: Request) {
       title,
       description: body.description ?? null,
       assignee_id: body.assignee_id ?? null,
-      due_at: body.due_at ?? null,
+      start_at: startAt,
+      due_at: dueAt,
+      estimated_hours: estimatedHours ?? null,
       created_by: user.id,
     })
     .select("*, assignee:profiles!tasks_assignee_id_fkey(id, display_name)")
