@@ -25,6 +25,7 @@ export function Board({
 }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [modalOpen, setModalOpen] = useState(false);
+  const [sortByDueDate, setSortByDueDate] = useState(false);
   const isAdmin = currentUser.role === "admin";
 
   async function handleStatusChange(taskId: string, status: TaskStatus) {
@@ -56,21 +57,39 @@ export function Board({
     return null;
   }
 
-  const myTasks = tasks.filter((t) => t.assignee_ids.includes(currentUser.id));
-  const unassignedTasks = tasks.filter((t) => t.assignee_ids.length === 0);
+  const displayTasks = sortByDueDate
+    ? [...tasks].sort((a, b) => {
+        if (a.due_at === null && b.due_at === null) return 0;
+        if (a.due_at === null) return 1;
+        if (b.due_at === null) return -1;
+        return new Date(a.due_at).getTime() - new Date(b.due_at).getTime();
+      })
+    : tasks;
+
+  const myTasks = displayTasks.filter((t) => t.assignee_ids.includes(currentUser.id));
+  const unassignedTasks = displayTasks.filter((t) => t.assignee_ids.length === 0);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-bold text-gray-900">ボード</h2>
-        <CreateTaskButton onClick={() => setModalOpen(true)} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSortByDueDate((prev) => !prev)}
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            {sortByDueDate ? "作成順に戻す" : "期限順に並べ替え"}
+          </button>
+          <CreateTaskButton onClick={() => setModalOpen(true)} />
+        </div>
       </div>
 
-      <MyTasksSection tasks={myTasks} onStatusChange={handleStatusChange} />
+      <MyTasksSection tasks={myTasks} currentUser={currentUser} onStatusChange={handleStatusChange} />
 
       <UnassignedSection
         tasks={unassignedTasks}
         canEdit={isAdmin}
+        currentUser={currentUser}
         onStatusChange={handleStatusChange}
       />
 
@@ -80,8 +99,9 @@ export function Board({
           <MemberSection
             key={member.id}
             memberName={member.display_name}
-            tasks={tasks.filter((t) => t.assignee_ids.includes(member.id))}
+            tasks={displayTasks.filter((t) => t.assignee_ids.includes(member.id))}
             canEdit={isAdmin || member.id === currentUser.id}
+            currentUser={currentUser}
             onStatusChange={handleStatusChange}
           />
         ))}

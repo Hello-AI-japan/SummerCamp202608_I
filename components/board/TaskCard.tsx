@@ -1,5 +1,11 @@
-import type { TaskStatus, TaskWithAssignee } from "@/types/task";
+"use client";
+
+import { useState } from "react";
+import type { Role, TaskStatus, TaskWithAssignee, ApiResponse } from "@/types/task";
+import type { Comment } from "@/types/comment";
 import { StatusBadge, StatusSelect } from "./StatusSelect";
+import { CommentList } from "./CommentList";
+import { CommentForm } from "./CommentForm";
 
 function isOverdue(dueAt: string | null, status: TaskStatus) {
   if (!dueAt || status === "done") return false;
@@ -20,14 +26,68 @@ function isDueToday(dueAt: string | null) {
 export function TaskCard({
   task,
   canEdit,
+  currentUser,
   onStatusChange,
 }: {
   task: TaskWithAssignee;
   canEdit: boolean;
+  currentUser: { id: string; role: Role };
   onStatusChange: (status: TaskStatus) => void;
 }) {
   const overdue = isOverdue(task.due_at, task.status);
   const dueToday = isDueToday(task.due_at);
+
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [comments, setComments] = useState<Comment[] | null>(null);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
+
+  async function toggleComments() {
+    const nextOpen = !commentsOpen;
+    setCommentsOpen(nextOpen);
+
+    if (nextOpen && comments === null) {
+      setLoadingComments(true);
+      setCommentError(null);
+      const res = await fetch(`/api/tasks/${task.id}/comments`);
+      const json = (await res.json()) as ApiResponse<Comment[]>;
+      if (json.data) {
+        setComments(json.data);
+      } else {
+        setComments([]);
+        setCommentError(json.error ?? "コメントの取得に失敗しました");
+      }
+      setLoadingComments(false);
+    }
+  }
+
+  async function handleAddComment(body: string) {
+    setCommentError(null);
+    const res = await fetch(`/api/tasks/${task.id}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+    });
+    const json = (await res.json()) as ApiResponse<Comment>;
+
+    if (json.data) {
+      setComments((prev) => [...(prev ?? []), json.data!]);
+    } else {
+      setCommentError(json.error ?? "コメントの投稿に失敗しました");
+    }
+  }
+
+  async function handleDeleteComment(commentId: string) {
+    setCommentError(null);
+    const res = await fetch(`/api/comments/${commentId}`, { method: "DELETE" });
+    const json = (await res.json()) as ApiResponse<{ id: string }>;
+
+    if (json.data) {
+      setComments((prev) => (prev ?? []).filter((c) => c.id !== commentId));
+    } else {
+      setCommentError(json.error ?? "コメントの削除に失敗しました");
+    }
+  }
 
   return (
     <div
@@ -48,10 +108,35 @@ export function TaskCard({
       >
         {task.due_at ? `期限: ${new Date(task.due_at).toLocaleDateString("ja-JP")}` : "期限なし"}
       </p>
-      {canEdit ? (
-        <StatusSelect value={task.status} onChange={onStatusChange} />
-      ) : (
-        <StatusBadge value={task.status} />
+      <div className="flex items-center justify-between">
+        {canEdit ? (
+          <StatusSelect value={task.status} onChange={onStatusChange} />
+        ) : (
+          <StatusBadge value={task.status} />
+        )}
+        <button
+          onClick={toggleComments}
+          className="text-xs text-gray-500 underline hover:text-gray-700"
+        >
+          {commentsOpen ? "コメントを閉じる" : "コメント"}
+        </button>
+      </div>
+
+      {commentsOpen && (
+        <div className="mt-3 border-t border-gray-100 pt-2">
+          {loadingComments || comments === null ? (
+            <p className="text-xs text-gray-400">読み込み中...</p>
+          ) : (
+            <CommentList
+              comments={comments}
+              currentUserId={currentUser.id}
+              isAdmin={currentUser.role === "admin"}
+              onDelete={handleDeleteComment}
+            />
+          )}
+          {commentError && <p className="mt-1 text-xs text-red-600">{commentError}</p>}
+          <CommentForm onSubmit={handleAddComment} />
+        </div>
       )}
     </div>
   );

@@ -1,13 +1,15 @@
-import type { TaskStatus, TaskWithAssignee } from "@/types/task";
+import type { Role, TaskStatus, TaskWithAssignee } from "@/types/task";
 import { TaskCard } from "./TaskCard";
 
 export function UnassignedSection({
   tasks,
   canEdit,
+  currentUser,
   onStatusChange,
 }: {
   tasks: TaskWithAssignee[];
   canEdit: boolean;
+  currentUser: { id: string; role: Role };
   onStatusChange: (taskId: string, status: TaskStatus) => void;
 }) {
   if (tasks.length === 0) return null;
@@ -21,6 +23,7 @@ export function UnassignedSection({
             key={task.id}
             task={task}
             canEdit={canEdit}
+            currentUser={currentUser}
             onStatusChange={(status) => onStatusChange(task.id, status)}
           />
         ))}

@@ -10,8 +10,8 @@
 - [x] 下準備: `supabase/migrations/0003_m4_m7_schema.sql`（`estimated_hours`列・`task_comments`テーブル）、型定義、通知関数の配線を実装する
 - [ ] M4（Aさん）: `lib/notifications/notify.ts`にSlack Incoming Webhook連携を実装する
 - [ ] M5（Aさん）: `/gantt`ページでガントチャートと工数集計を実装する
-- [ ] M6（Bさん）: `Board.tsx`に期限順ソートを実装する（赤色ハイライトは実装済み）
-- [ ] M7（Bさん）: タスクコメントのAPI（`/api/tasks/:id/comments`, `/api/comments/:id`）とUIを実装する
+- [x] M6: `Board.tsx`に期限順ソートを実装する（赤色ハイライトは実装済み）
+- [x] M7: タスクコメントのAPI（`/api/tasks/:id/comments`, `/api/comments/:id`）とUIを実装する
 
 ## Should
 
@@ -47,6 +47,7 @@
 - [x] profiles のロール判定が `public.is_admin()` 経由になっていることを確認する
 - [x] API Route Handler でも権限チェックを行っていることを確認する
 - [x] `SUPABASE_SERVICE_ROLE_KEY` がクライアント側に露出していないことを確認する
+- [ ] task_comments の DELETE が投稿者本人または admin に限定されていることを確認する（他人のコメントを削除できないこと）
 
 ## 動作確認
 
@@ -57,6 +58,8 @@
 - [ ] admin でタスクを削除できることを確認する
 - [ ] ブラウザのコンソールエラーがないことを確認する
 - [ ] `npm run build` が成功することを確認する
+- [ ] タスクにコメントを投稿・削除できることを確認する（自分のコメント／他人のコメントの両方で挙動を確認）
+- [ ] 「期限順に並べ替え」トグルで表示順が切り替わることを確認する
 
 ## Backlog（今後検討・現行スコープ外）
 
