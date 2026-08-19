@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心太郎さんのダッシュボード</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:        #f9f9f7;
+    --surface:     #fcfcfb;
+    --surface-2:   #f3f2ee;
+    --text-1:      #0b0b0b;
+    --text-2:      #52514e;
+    --muted:       #898781;
+    --hairline:    rgba(11,11,11,0.10);
+    --grid:        #e1e0d9;
+    --blue:        #2a78d6;
+    --blue-soft:   #eaf2fc;
+    --good:        #0ca30c;
+    --warning:     #b7830a;
+    --critical:    #d03b3b;
+    --sample:      #7a5cc0;
+    --sample-soft: #efeafb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="auto"] {
+      color-scheme: dark;
+      --page:      #0d0d0d;
+      --surface:   #1a1a19;
+      --surface-2: #232320;
+      --text-1:    #ffffff;
+      --text-2:    #c3c2b7;
+      --muted:     #898781;
+      --hairline:  rgba(255,255,255,0.10);
+      --grid:      #2c2c2a;
+      --blue:      #3987e5;
+      --blue-soft: #17263a;
+      --good:      #0ca30c;
+      --warning:   #fab219;
+      --critical:  #e66767;
+      --sample:    #9085e9;
+      --sample-soft:#211f36;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:      #0d0d0d;
+    --surface:   #1a1a19;
+    --surface-2: #232320;
+    --text-1:    #ffffff;
+    --text-2:    #c3c2b7;
+    --muted:     #898781;
+    --hairline:  rgba(255,255,255,0.10);
+    --grid:      #2c2c2a;
+    --blue:      #3987e5;
+    --blue-soft: #17263a;
+    --good:      #0ca30c;
+    --warning:   #fab219;
+    --critical:  #e66767;
+    --sample:    #9085e9;
+    --sample-soft:#211f36;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--text-1);
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; }
+
+  header.top {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+    gap: 10px; margin-bottom: 4px;
+  }
+  header.top h1 { font-size: 1.5rem; margin: 0; letter-spacing: .01em; }
+  .updated { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+  .greeting { color: var(--text-2); font-size: .95rem; margin: 2px 0 22px; }
+
+  .controls { display:flex; gap:8px; align-items:center; }
+  .btn {
+    border: 1px solid var(--hairline); background: var(--surface); color: var(--text-2);
+    border-radius: 8px; padding: 5px 11px; font-size: .8rem; cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { color: var(--text-1); }
+
+  /* stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(166px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px;
+    padding: 16px 18px; position: relative; min-height: 104px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .tile .label { font-size: .78rem; color: var(--text-2); }
+  .tile .value { font-size: 2rem; font-weight: 650; line-height: 1.05; letter-spacing: -.01em; }
+  .tile .value .unit { font-size: .95rem; font-weight: 500; color: var(--text-2); margin-left: 3px; }
+  .tile .sub { font-size: .78rem; color: var(--muted); }
+  .tile.accent { border-left: 3px solid var(--blue); }
+
+  /* two-column panels */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .panel {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px;
+    padding: 4px 20px 18px; margin-bottom: 18px;
+  }
+  .panel h2 {
+    font-size: .95rem; letter-spacing: .02em; margin: 16px 0 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel h2 .src {
+    font-size: .68rem; font-weight: 500; color: var(--good);
+    border: 1px solid color-mix(in srgb, var(--good) 40%, transparent);
+    background: color-mix(in srgb, var(--good) 12%, transparent);
+    border-radius: 999px; padding: 1px 8px; letter-spacing: .04em;
+  }
+  .panel h2 .src.sample {
+    color: var(--sample); background: var(--sample-soft);
+    border-color: color-mix(in srgb, var(--sample) 40%, transparent);
+  }
+
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  ul.list li {
+    display: flex; gap: 12px; padding: 11px 2px; border-top: 1px solid var(--grid);
+    align-items: flex-start;
+  }
+  ul.list li:first-child { border-top: none; }
+
+  .when { flex: 0 0 auto; width: 58px; text-align: center; }
+  .when .d { font-size: 1.15rem; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
+  .when .m { font-size: .7rem; color: var(--muted); }
+  .when .t { font-size: .72rem; color: var(--text-2); margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .ev-body { flex: 1 1 auto; min-width: 0; }
+  .ev-title { font-size: .92rem; font-weight: 500; }
+  .ev-meta { font-size: .76rem; color: var(--muted); margin-top: 2px; }
+  .pill {
+    display:inline-block; font-size:.68rem; padding:1px 7px; border-radius:999px;
+    background: var(--blue-soft); color: var(--blue); margin-left: 6px; vertical-align: middle;
+  }
+  .pill.today { background: color-mix(in srgb, var(--warning) 18%, transparent); color: var(--warning); }
+
+  /* mail rows */
+  .mail-from { display:flex; align-items:center; gap:8px; }
+  .dot { width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
+  .dot.reply { background: var(--critical); }
+  .dot.progress { background: var(--warning); }
+  .dot.review { background: var(--blue); }
+  .mail-sub { font-size:.9rem; font-weight:500; margin-top:2px; }
+  .mail-snip { font-size:.76rem; color: var(--muted); margin-top:2px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .tag { font-size:.68rem; padding:1px 7px; border-radius:6px; margin-left:auto; white-space:nowrap; }
+  .tag.reply { background: color-mix(in srgb, var(--critical) 14%, transparent); color: var(--critical); }
+  .tag.progress { background: color-mix(in srgb, var(--warning) 18%, transparent); color: var(--warning); }
+  .tag.review { background: var(--blue-soft); color: var(--blue); }
+  .mail-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .mail-date { font-size:.72rem; color:var(--muted); margin-left:auto; font-variant-numeric:tabular-nums; }
+  .ch-tag { font-size:.72rem; color:var(--blue); background:var(--blue-soft); border-radius:6px; padding:1px 7px; margin-right:2px; }
+  .src-tag { font-size:.7rem; border-radius:6px; padding:1px 8px; margin-right:2px; font-weight:500; }
+  .src-tag.plaud { color:var(--sample); background:var(--sample-soft); }
+  .src-tag.cb { color:#199e70; background:color-mix(in srgb, #1baf7a 14%, transparent); }
+
+  .newsletter-note {
+    margin-top: 12px; font-size: .78rem; color: var(--muted);
+    background: var(--surface-2); border-radius: 8px; padding: 9px 12px;
+  }
+
+  /* sample todo */
+  .todo li { display:flex; align-items:center; gap:10px; padding:9px 2px; border-top:1px solid var(--grid); }
+  .todo li:first-child { border-top:none; }
+  .todo .box { width:15px; height:15px; border:1.5px solid var(--muted); border-radius:4px; flex:0 0 auto; }
+  .todo .box.done { background: var(--good); border-color: var(--good); position:relative; }
+  .todo .box.done::after { content:"✓"; color:#fff; font-size:11px; position:absolute; top:-2px; left:1px; }
+  .todo .txt { font-size:.9rem; }
+  .todo .txt.done { color: var(--muted); text-decoration: line-through; }
+
+  /* dismiss checkboxes (全項目チェックで非表示) */
+  ul.list li { transition: opacity .25s ease; }
+  .dz-box {
+    flex: 0 0 auto; width: 16px; height: 16px; margin-top: 3px; padding: 0;
+    border: 1.5px solid var(--muted); border-radius: 5px; background: transparent;
+    cursor: pointer; position: relative; appearance: none;
+  }
+  .dz-box:hover { border-color: var(--good); }
+  .dz-box::after { content: "✓"; position: absolute; top: -4px; left: 1px; font-size: 12px; color: transparent; line-height: 1; }
+  li.dz-done { opacity: .4; }
+  li.dz-done .dz-box { background: var(--good); border-color: var(--good); }
+  li.dz-done .dz-box::after { color: #fff; }
+  li.dz-done .mail-sub, li.dz-done .ev-title, li.dz-done .txt, li.dz-done .mail-snip, li.dz-done .mail-from { text-decoration: line-through; }
+  .btn.restore { display: none; }
+  .btn.dedup { display: none; }
+
+  /* 実行ボタン & 重複バッジ */
+  .run-btn {
+    flex: 0 0 auto; font-size: .72rem; border: 1px solid var(--hairline); background: var(--surface);
+    color: var(--blue); border-radius: 7px; padding: 2px 10px; cursor: pointer; white-space: nowrap;
+    font-family: inherit; align-self: flex-start;
+  }
+  .run-btn:hover { background: var(--blue-soft); }
+  .dup-chip { font-size: .66rem; color: var(--warning); background: color-mix(in srgb, var(--warning) 18%, transparent); border-radius: 6px; padding: 0 6px; margin-left: 6px; }
+  li.dup-hidden { display: none; }
+  .row-cta { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex: 0 0 auto; }
+
+  /* 実行ハンドオフ・モーダル */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--surface); color: var(--text-1); border: 1px solid var(--hairline);
+    border-radius: 14px; max-width: 560px; width: 100%; padding: 20px; box-shadow: 0 12px 40px rgba(0,0,0,.3);
+  }
+  .modal h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .modal p { margin: 0 0 10px; font-size: .82rem; color: var(--text-2); }
+  .modal textarea {
+    width: 100%; min-height: 150px; border: 1px solid var(--hairline); border-radius: 8px; padding: 10px;
+    font-family: inherit; font-size: .82rem; color: var(--text-1); background: var(--page); resize: vertical; box-sizing: border-box;
+  }
+  .modal-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+  .modal .obs { font-size: .78rem; margin: 8px 0 2px; color: var(--text-2); }
+  .modal input.obs-file { width: 100%; border: 1px solid var(--hairline); border-radius: 8px; padding: 7px 10px; font-family: inherit; font-size: .8rem; background: var(--page); color: var(--text-1); box-sizing: border-box; }
+
+  .sample-banner {
+    background: var(--sample-soft); color: var(--sample);
+    border: 1px dashed color-mix(in srgb, var(--sample) 45%, transparent);
+    border-radius: 10px; padding: 8px 12px; font-size: .8rem; margin-top: 10px;
+  }
+
+  footer.foot { margin-top: 28px; color: var(--muted); font-size: .76rem; line-height:1.6; }
+  footer.foot code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; margin:6px 0 0; font-size:.74rem; color:var(--text-2); }
+  .legend span { display:flex; align-items:center; gap:6px; }
+
+  @media (max-width: 760px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .cols { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>心太郎さんのダッシュボード</h1>
+    <div class="controls">
+      <button class="btn dedup" id="dedupBtn">重複を隠す</button>
+      <button class="btn restore" id="restoreBtn">非表示を戻す</button>
+      <button class="btn" id="themeBtn">🌓 テーマ</button>
+      <span class="updated" id="updated"></span>
+    </div>
+  </header>
+  <p class="greeting" id="greeting"></p>
+
+  <!-- STAT TILES -->
+  <section class="tiles">
+    <div class="tile accent">
+      <div class="label">次の予定まで</div>
+      <div class="value" id="nextCountdown">—</div>
+      <div class="sub" id="nextName">—</div>
+    </div>
+    <div class="tile">
+      <div class="label">今後7日間の予定</div>
+      <div class="value" id="week7">—<span class="unit">件</span></div>
+      <div class="sub">カレンダー（実データ）</div>
+    </div>
+    <div class="tile">
+      <div class="label">要対応メール</div>
+      <div class="value" id="mailCount">—<span class="unit">件</span></div>
+      <div class="sub">受信トレイ（実データ）</div>
+    </div>
+    <div class="tile">
+      <div class="label">Slack メンション</div>
+      <div class="value" id="slackCount">—<span class="unit">件</span></div>
+      <div class="sub">自分宛（実データ）</div>
+    </div>
+    <div class="tile">
+      <div class="label">会話からのやること</div>
+      <div class="value" id="talkCount">—<span class="unit">件</span></div>
+      <div class="sub">Plaud・Circleback</div>
+    </div>
+  </section>
+
+  <!-- 定常タスク（毎日） -->
+  <div class="panel">
+    <h2>定常タスク（毎日） <span class="src">研修生ルーティン</span></h2>
+    <ul class="list" id="routine"></ul>
+    <div class="newsletter-note">
+      🔁 毎日やることをここに固定表示します。「日報を作成 ▶」は、Obsidianの日報テンプレ（05_Daily/日付.md）に沿って、今日の予定・Slack/メール対応・Plaud会話メモから実績を自動でまとめる指示を生成します。
+    </div>
+  </div>
+
+  <div class="cols">
+    <!-- CALENDAR -->
+    <div>
+      <div class="panel">
+        <h2>今後の予定 <span class="src">実データ · Googleカレンダー</span></h2>
+        <ul class="list" id="events"></ul>
+      </div>
+    </div>
+
+    <!-- INBOX -->
+    <div>
+      <div class="panel">
+        <h2>受信トレイ · 要対応 <span class="src">実データ · Gmail</span></h2>
+        <ul class="list" id="mail"></ul>
+        <div class="legend">
+          <span><span class="dot reply"></span>要返信</span>
+          <span><span class="dot progress"></span>対応中</span>
+          <span><span class="dot review"></span>要確認</span>
+        </div>
+        <div class="newsletter-note" id="newsNote"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <!-- SLACK -->
+    <div>
+      <div class="panel">
+        <h2>Slack · 自分宛メンション <span class="src">実データ · Slack</span></h2>
+        <ul class="list" id="slack"></ul>
+      </div>
+    </div>
+
+    <!-- 会話・議事録からのやること (Plaud + Circleback) -->
+    <div>
+      <div class="panel">
+        <h2>会話・議事録からのやること <span class="src">実データ · Plaud（Notion）＋ Circleback</span></h2>
+        <ul class="list" id="talks"></ul>
+        <div class="newsletter-note">
+          🎙️ Plaudの録音（Notion）と Circleback の議事録から、自分に関係する「やること」を自動抽出。話者の割り当ては自動判定のため、違うものはチェックで消せます。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <div><strong>データソース：</strong> Googleカレンダー（予定）／ Gmail（受信トレイ）／ Slack（自分宛メンション）／ Plaud（Notion文字起こし）／ Circleback（議事録）— すべて実データです。取得時刻 <span id="footStamp"></span>。</div>
+    <div style="margin-top:6px;"><strong>使い方：</strong> 各項目の左チェックで不要なものを非表示にできます（返信不要なメール等）。「重複の可能性」が付いた項目は右上「重複を隠す」でまとめて整理。各項目の「実行 ▶」を押すと、そのタスクをClaudeに実行してもらう指示が作れます（手順が決まっている作業はObsidianのファイル名を指定可）。</div>
+    <div style="margin-top:6px;"><strong>自動更新について：</strong> このHTMLを開くたびにカウントダウンや「本日」表示はその場で再計算されます。ただし予定・メール・Slackの<em>中身</em>を最新に取り込むには、毎朝など定期的にこのファイルを再生成するスケジュール設定が必要です（平日毎朝7時JSTに自動更新するよう設定済み）。</div>
+  </footer>
+
+</div>
+
+<!-- 実行ハンドオフ・モーダル -->
+<div class="modal-bg" id="runModal">
+  <div class="modal">
+    <h3>このタスクをClaudeに実行してもらう</h3>
+    <p>下の指示をコピーして、Claude（Cowork）に貼り付けてください。手順が決まっている作業は、参照するObsidianファイル名を指定できます（任意）。</p>
+    <div class="obs">📄 参照するObsidianファイル（任意・例: 手順/請求書作成.md）</div>
+    <input class="obs-file" id="obsFile" placeholder="空欄でもOK。指定すると『そのファイルを読んで手順に従って』と指示に追記します。">
+    <div class="obs">実行指示（自動生成・編集可）</div>
+    <textarea id="runText" spellcheck="false"></textarea>
+    <div class="modal-row">
+      <button class="btn" id="copyBtn">📋 コピー</button>
+      <button class="btn" id="closeModal">閉じる</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  // ==== 実データ（取得時刻: 2026-08-12 21:01 JST）====
+  // Googleカレンダー — 実際の予定（表示はJST固定）
+  const EVENTS = [
+    { start: "2026-08-12T11:30:00+09:00", end: "2026-08-12T12:00:00+09:00",
+      day: "12", md: "8月 (水)", time: "11:30",
+      title: "講演事前打合せ", where: "Zoom", who: "小川椋徹・杉山佳 他" },
+    { start: "2026-08-17T10:00:00+09:00", end: "2026-08-17T11:00:00+09:00",
+      day: "17", md: "8月 (月)", time: "10:00",
+      title: "【月次リアル開催】朝会 ※Zoomも繋ぎます", where: "Google Meet", who: "2WINS全体" },
+    { start: "2026-09-15T09:00:00+09:00", end: "2026-09-15T11:00:00+09:00",
+      day: "15", md: "9月 (火)", time: "09:00",
+      title: "講演本番", where: "Google Meet", who: "小川椋徹・杉山佳 他" },
+  ];
+
+  // Gmail 受信トレイ — 実際の要対応メール
+  const MAIL = [
+    { from: "いすゞ自動車 加納修二", date: "8/7",
+      subject: "（いすゞ自動車）お問い合わせの件につきまして",
+      snippet: "会長・片山への依頼について、イベントの企画書や詳細資料の送付をご依頼いただいています。",
+      status: "reply", statusLabel: "要返信" },
+    { from: "中外製薬 坂井洋子（永山治 秘書）", date: "8/6",
+      subject: "「塾生メシ」での永山との対談の件",
+      snippet: "永山様が対談を受諾。企画書送付済み（8/6返信）。先方からの次の返信を待っている状態です。",
+      status: "progress", statusLabel: "対応中" },
+    { from: "八子航（Google Drive 共有）", date: "8/7",
+      subject: "共有スプレッドシート「メルマガリストと本文」",
+      snippet: "編集の招待。内容の確認・レビューが必要です。",
+      status: "review", statusLabel: "要確認" },
+  ];
+
+  const NEWSLETTER_COUNT = 20; // 直近10日で受信したニュースレター系（Zapier / Circleback / Eight / Notion / hottolink / Plaud 等）の目安
+
+  // Slack 自分宛メンション — 実際のデータ（workspace: 2winsinchq）
+  const SLACK = [
+    { ch: "team-scr", from: "Kei Sugiyama", date: "8/6",
+      text: "Q&Aは反映できますか？",
+      url: "https://2winsinchq.slack.com/archives/C0BFZJUBQ6Q/p1785980499913139?thread_ts=1785808084.009109&cid=C0BFZJUBQ6Q" },
+    { ch: "team-helloai", from: "垣花昌旦", date: "8/5",
+      text: "記入お願いします。",
+      url: "https://2winsinchq.slack.com/archives/C0A3CLD7BJP/p1785908369051869?thread_ts=1785902681.748339&cid=C0A3CLD7BJP" },
+    { ch: "team-東大メシ", from: "Kei Sugiyama", date: "8/4",
+      text: "ゲストリストの8月以降のゲストは反映されていますか？（スプレッドシート共有）",
+      url: "https://2winsinchq.slack.com/archives/C0APVEFK3PX/p1785829435397839?thread_ts=1785829435.397839&cid=C0APVEFK3PX" },
+    { ch: "team-社内業務効率化", from: "Taiyo Aono", date: "8/4",
+      text: "週50回／100回の会議を全てフローに載せた場合のコスト概算を教えてほしい。",
+      url: "https://2winsinchq.slack.com/archives/C0ARWTBMAR3/p1785812266134469?thread_ts=1776233758.735919&cid=C0ARWTBMAR3" },
+  ];
+
+  // 会話・議事録からのやること — 実データ（Plaud=Notion文字起こし / Circleback議事録）
+  const TALKS = [
+    { src: "Plaud", meeting: "業務効率化と組織マネジメントの議論 (8/12)",
+      text: "MacBookを購入・セットアップして、ゆうちゃんへ引き継ぐ",
+      url: "https://app.notion.com/p/3ba6e3b8e340817db839d6713ac88589" },
+    { src: "Plaud", meeting: "業務効率化と組織マネジメントの議論 (8/12)",
+      text: "受領したフォーマットと見本をもとに前月分の請求書を作成する",
+      url: "https://app.notion.com/p/3ba6e3b8e340817db839d6713ac88589" },
+    { src: "Plaud", meeting: "業務効率化と組織マネジメントの議論 (8/12)",
+      text: "業務ナレッジをAIに学習させ、従業員が検索・質問できるDBを構築する",
+      url: "https://app.notion.com/p/3ba6e3b8e340817db839d6713ac88589" },
+    { src: "Circleback", meeting: "研修×本郷会議 (7/26)",
+      text: "備品（三脚・名札・ホチキス等）の在庫を確認し、不明点はRikuに連絡。配付資料を印刷して持参する",
+      url: "" },
+  ];
+
+  // ==== レンダリング ====
+  const DATA_STAMP = new Date("2026-08-13T00:15:00+09:00");
+  const now = new Date();
+  const days = ["日","月","火","水","木","金","土"];
+  const pad = n => String(n).padStart(2,"0");
+
+  // JST固定のヘルパー（閲覧者のタイムゾーンに関係なく日本時間で表示）
+  const jstFmt = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo", year:"numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit", weekday:"short", hour12:false });
+  function jst(date){
+    const o = {};
+    for (const p of jstFmt.formatToParts(date)) o[p.type] = p.value;
+    return o; // {year,month,day,hour,minute,weekday}
+  }
+  const jstDay = d => `${jst(d).year}-${jst(d).month}-${jst(d).day}`;
+  const nowJ = jst(now);
+
+  // greeting
+  const h = parseInt(nowJ.hour, 10);
+  const g = h < 5 ? "こんばんは" : h < 11 ? "おはようございます" : h < 18 ? "こんにちは" : "こんばんは";
+  document.getElementById("greeting").textContent =
+    `${g}。今日は ${nowJ.year}年${parseInt(nowJ.month)}月${parseInt(nowJ.day)}日（${nowJ.weekday}）です。下の予定と受信トレイを確認しましょう。`;
+  document.getElementById("updated").textContent =
+    `表示: ${nowJ.year}/${nowJ.month}/${nowJ.day} ${nowJ.hour}:${nowJ.minute}`;
+  const dj = jst(DATA_STAMP);
+  document.getElementById("footStamp").textContent = `${dj.year}/${dj.month}/${dj.day} ${dj.hour}:${dj.minute}`;
+
+  // events
+  const upcoming = EVENTS.map(e => ({...e, s: new Date(e.start), e: new Date(e.end)})).sort((a,b)=>a.s-b.s);
+  const evUl = document.getElementById("events");
+  upcoming.forEach(e => {
+    const isToday = jstDay(e.s) === jstDay(now);
+    const past = e.e < now;
+    const li = document.createElement("li");
+    li.style.opacity = past ? .45 : 1;
+    li.innerHTML = `
+      <div class="when">
+        <div class="d">${e.day}</div>
+        <div class="m">${e.md}</div>
+        <div class="t">${e.time}</div>
+      </div>
+      <div class="ev-body">
+        <div class="ev-title">${e.title}
+          ${isToday && !past ? '<span class="pill today">本日</span>' : ''}
+          ${past ? '<span class="pill">終了</span>' : ''}
+        </div>
+        <div class="ev-meta">${e.where} · ${e.who}</div>
+      </div>`;
+    evUl.appendChild(li);
+  });
+
+  // next event countdown（絶対時刻の差なのでタイムゾーン非依存）
+  const next = upcoming.find(e => e.s >= now) || upcoming.find(e => e.e >= now);
+  if (next) {
+    const diffMs = next.s - now;
+    const d = Math.floor(diffMs / 86400000);
+    const hh = Math.floor((diffMs % 86400000) / 3600000);
+    let txt;
+    if (diffMs < 0) txt = "進行中";
+    else if (d >= 1) txt = `${d}<span class="unit">日</span> ${hh}<span class="unit">時間</span>`;
+    else txt = `${hh}<span class="unit">時間</span> ${Math.floor((diffMs%3600000)/60000)}<span class="unit">分</span>`;
+    document.getElementById("nextCountdown").innerHTML = txt;
+    document.getElementById("nextName").textContent =
+      `${next.title.slice(0,16)}${next.title.length>16?"…":""}（${next.md.split(" ")[0]}${next.day}日 ${next.time}）`;
+  }
+
+  // week7 count
+  const in7 = upcoming.filter(e => { const dd=(e.s-now)/86400000; return dd>=-0.5 && dd<=7; }).length;
+  document.getElementById("week7").innerHTML = `${in7}<span class="unit">件</span>`;
+
+  // mail
+  const mailUl = document.getElementById("mail");
+  MAIL.forEach(m => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div style="flex:1 1 auto; min-width:0;">
+        <div class="mail-head">
+          <span class="mail-from"><span class="dot ${m.status}"></span>${m.from}</span>
+          <span class="mail-date">${m.date}</span>
+        </div>
+        <div class="mail-sub">${m.subject}</div>
+        <div class="mail-snip">${m.snippet}</div>
+      </div>
+      <span class="tag ${m.status}">${m.statusLabel}</span>`;
+    li.style.flexDirection = "row";
+    mailUl.appendChild(li);
+  });
+  document.getElementById("mailCount").innerHTML = `${MAIL.filter(m=>m.status!=="progress").length}<span class="unit">件</span>`;
+  document.getElementById("newsNote").innerHTML =
+    `📬 このほか直近10日でニュースレター・通知系メールが約 <strong>${NEWSLETTER_COUNT}</strong> 件（Zapier / Circleback / Eight / Notion / hottolink / Plaud 等）。要対応リストからは自動で除外しています。`;
+
+  // slack
+  const slackUl = document.getElementById("slack");
+  SLACK.forEach(m => {
+    const li = document.createElement("li");
+    li.style.flexDirection = "row";
+    li.innerHTML = `
+      <div style="flex:1 1 auto; min-width:0;">
+        <div class="mail-head">
+          <span class="mail-from"><span class="ch-tag">#${m.ch}</span>${m.from}</span>
+          <span class="mail-date">${m.date}</span>
+        </div>
+        <div class="mail-snip" style="margin-top:4px; -webkit-line-clamp:2;">${m.text}</div>
+      </div>
+      <a class="tag review" href="${m.url}" target="_blank" rel="noopener" style="text-decoration:none;">開く ↗</a>`;
+    slackUl.appendChild(li);
+  });
+  document.getElementById("slackCount").innerHTML = `${SLACK.length}<span class="unit">件</span>`;
+
+  // talks (Plaud + Circleback)
+  const talksUl = document.getElementById("talks");
+  TALKS.forEach(t => {
+    const li = document.createElement("li");
+    li.style.flexDirection = "row";
+    const tagCls = t.src === "Plaud" ? "plaud" : "cb";
+    const openBtn = t.url ? `<a class="tag review" href="${t.url}" target="_blank" rel="noopener" style="text-decoration:none;">開く ↗</a>` : "";
+    li.innerHTML = `
+      <div style="flex:1 1 auto; min-width:0;">
+        <div class="mail-head">
+          <span class="src-tag ${tagCls}">${t.src}</span>
+          <span class="mail-date" style="margin-left:0; color:var(--muted);">${t.meeting}</span>
+        </div>
+        <div class="mail-sub" style="margin-top:4px;">${t.text}</div>
+      </div>
+      ${openBtn}`;
+    talksUl.appendChild(li);
+  });
+  document.getElementById("talkCount").innerHTML = `${TALKS.length}<span class="unit">件</span>`;
+
+
+  // ==== 実行ハンドオフ（押すとClaude向け指示を生成）====
+  const modal = document.getElementById("runModal");
+  const runText = document.getElementById("runText");
+  const obsFile = document.getElementById("obsFile");
+  const toast = document.getElementById("toast");
+  let currentTask = "", currentSrc = "", currentCustom = null;
+  function showToast(msg){ toast.textContent = msg; toast.classList.add("show"); setTimeout(()=>toast.classList.remove("show"), 1800); }
+  function buildInstruction(){
+    let s = currentCustom
+      ? currentCustom
+      : `【ダッシュボードからの実行依頼】\n次のタスクを実行してください：\n${currentTask}\n出典：${currentSrc}`;
+    const f = obsFile.value.trim();
+    if (f) s += `\n\n手順は Obsidian の「${f}」を読み込み、その内容に従って進めてください。`;
+    else if (!currentCustom) s += `\n\n※具体的な手順が不明な場合は、参照すべきObsidianのファイル名を私に確認してください。`;
+    return s;
+  }
+  function openRun(task, src, custom){
+    currentTask = task; currentSrc = src; currentCustom = custom || null;
+    obsFile.value = "";
+    runText.value = buildInstruction();
+    modal.classList.add("show");
+  }
+  obsFile.addEventListener("input", () => { runText.value = buildInstruction(); });
+  document.getElementById("closeModal").addEventListener("click", () => modal.classList.remove("show"));
+  modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("show"); });
+  document.getElementById("copyBtn").addEventListener("click", async () => {
+    runText.select();
+    try { await navigator.clipboard.writeText(runText.value); showToast("コピーしました"); }
+    catch { try { document.execCommand("copy"); showToast("コピーしました"); } catch { showToast("テキストを選択してコピーしてください"); } }
+  });
+  function addRun(ul, srcLabel){
+    ul.querySelectorAll(":scope > li").forEach(li => {
+      const taskEl = li.querySelector(".mail-sub") || li.querySelector(".ev-title") || li.querySelector(".txt");
+      if (!taskEl) return;
+      const btn = document.createElement("button");
+      btn.className = "run-btn"; btn.textContent = "実行 ▶";
+      btn.addEventListener("click", () => openRun(taskEl.textContent.trim(), srcLabel));
+      li.appendChild(btn);
+    });
+  }
+  addRun(document.getElementById("mail"),  "Gmail 受信トレイ");
+  addRun(document.getElementById("slack"), "Slack メンション");
+  addRun(document.getElementById("talks"), "会話・議事録（Plaud / Circleback）");
+
+  // 定常タスク（毎日）
+  const todayStr = `${nowJ.year}-${nowJ.month}-${nowJ.day}`;
+  const nippoInstruction =
+    `【ダッシュボードからの実行依頼】今日（${todayStr}）の日報を作成してください。\n` +
+    `保存先: Obsidian の 05_Daily/${todayStr}.md（既存テンプレの形式を厳守）。\n` +
+    `テンプレ構成: 「## 最優先事項」「## 行動記録（HH:MM 形式）」「## タスク一覧（### 引き継ぎ(前日未完了) / ### 今日の新規タスク）」「## 振り返り」。\n` +
+    `やること:\n` +
+    `1. 前日（05_Daily の直近ファイル）の未完了 - [ ] を「引き継ぎ」へ転記。\n` +
+    `2. 今日のGoogleカレンダー予定、Slack/メールで対応した件、Plaud（Notion）の会話メモから「行動記録」と「今日の新規タスク」を埋める。\n` +
+    `3. 「最優先事項」は当日の要対応から1〜3件選ぶ。\n` +
+    `4. 「振り返り」は空のまま（夜に本人が記入）。\n` +
+    `完成したら 05_Daily/${todayStr}.md に上書き保存し、内容を要約して報告してください。`;
+  const ROUTINE = [
+    { title: "日報を作成", meta: `05_Daily/${todayStr}.md に自動まとめ`, custom: nippoInstruction, tag: "日報" },
+    { title: "Vault 自動Gitバックアップ", meta: "自動実行（設定済み）", auto: true, tag: "自動" },
+  ];
+  const routineUl = document.getElementById("routine");
+  ROUTINE.forEach(r => {
+    const li = document.createElement("li");
+    li.style.flexDirection = "row"; li.style.alignItems = "center";
+    const right = r.auto
+      ? `<span class="tag" style="background:var(--surface-2);color:var(--muted);">自動</span>`
+      : `<button class="run-btn" data-nippo="1">${r.title} ▶</button>`;
+    li.innerHTML = `
+      <div style="flex:1 1 auto; min-width:0;">
+        <div class="mail-sub">${r.title}</div>
+        <div class="mail-snip" style="-webkit-line-clamp:1;">${r.meta}</div>
+      </div>
+      ${right}`;
+    if (!r.auto) li.querySelector("[data-nippo]").addEventListener("click", () => openRun(r.title, "定常タスク", r.custom));
+    routineUl.appendChild(li);
+  });
+
+  // ==== 重複検知（メール/Slack/会話をまたいで似た用件を検出）====
+  const stop = new Set(["さん","です","ます","こと","ため","して","する","した","ある","いる","the","to","of","a","を","に","は","が","で","と","も","や","の","へ"]);
+  function tokens(s){
+    return new Set((s || "").toLowerCase().replace(/[、。・「」（）()【】\s,.!?！？]/g," ").split(" ").filter(w => w.length >= 2 && !stop.has(w)));
+  }
+  function jaccard(a, b){ let inter = 0; a.forEach(x => { if (b.has(x)) inter++; }); const uni = a.size + b.size - inter; return uni ? inter/uni : 0; }
+  const dupItems = [];
+  ["mail","slack","talks"].forEach(id => {
+    document.getElementById(id).querySelectorAll(":scope > li").forEach(li => {
+      const el = li.querySelector(".mail-sub") || li.querySelector(".mail-snip") || li.querySelector(".txt");
+      const head = li.querySelector(".mail-from, .ch-tag, .src-tag");
+      const text = (head ? head.textContent + " " : "") + (el ? el.textContent : "");
+      dupItems.push({ li, tok: tokens(text) });
+    });
+  });
+  let dupCount = 0;
+  for (let i = 0; i < dupItems.length; i++){
+    for (let j = i+1; j < dupItems.length; j++){
+      if (jaccard(dupItems[i].tok, dupItems[j].tok) >= 0.5){
+        [dupItems[i].li, dupItems[j].li].forEach(li => {
+          if (!li.querySelector(".dup-chip")){
+            const c = document.createElement("span"); c.className = "dup-chip"; c.textContent = "重複の可能性";
+            const h = li.querySelector(".mail-head") || li.firstElementChild;
+            (h || li).appendChild(c);
+          }
+        });
+        dupItems[j].li.dataset.dup = "1"; // 後発を「隠す」対象に
+        dupCount++;
+      }
+    }
+  }
+  const dedupBtn = document.getElementById("dedupBtn");
+  if (dupCount > 0){
+    dedupBtn.style.display = "inline-block";
+    dedupBtn.textContent = `重複を隠す (${dupCount})`;
+    dedupBtn.addEventListener("click", () => {
+      document.querySelectorAll('li[data-dup="1"]').forEach(li => {
+        if (!li.dataset.hidden){ li.style.display = "none"; li.dataset.hidden = "1"; hidden++; }
+      });
+      recount(); refreshRestore(); dedupBtn.style.display = "none";
+    });
+  }
+
+  // ==== チェックで非表示（TODO風に消せる）====
+  const visCount = ul => [...ul.querySelectorAll(":scope > li")].filter(li => !li.dataset.hidden).length;
+  function recount(){
+    document.getElementById("mailCount").innerHTML  = `${visCount(document.getElementById("mail"))}<span class="unit">件</span>`;
+    document.getElementById("slackCount").innerHTML = `${visCount(document.getElementById("slack"))}<span class="unit">件</span>`;
+    document.getElementById("talkCount").innerHTML  = `${visCount(document.getElementById("talks"))}<span class="unit">件</span>`;
+  }
+  let hidden = 0;
+  const restoreBtn = document.getElementById("restoreBtn");
+  function refreshRestore(){
+    restoreBtn.style.display = hidden > 0 ? "inline-block" : "none";
+    restoreBtn.textContent = `非表示を戻す (${hidden})`;
+  }
+  function wire(ul){
+    ul.querySelectorAll(":scope > li").forEach(li => {
+      if (li.dataset.dz) return; li.dataset.dz = "1";
+      const b = document.createElement("button");
+      b.className = "dz-box"; b.title = "完了・非表示にする";
+      b.addEventListener("click", () => {
+        if (li.dataset.hidden) return;
+        li.classList.add("dz-done");
+        setTimeout(() => { li.style.display = "none"; li.dataset.hidden = "1"; hidden++; recount(); refreshRestore(); }, 260);
+      });
+      li.insertBefore(b, li.firstChild);
+    });
+  }
+  ["events","mail","slack","talks"].forEach(id => wire(document.getElementById(id)));
+  restoreBtn.addEventListener("click", () => {
+    document.querySelectorAll("ul.list > li").forEach(li => {
+      li.style.display = ""; li.classList.remove("dz-done"); delete li.dataset.hidden;
+    });
+    hidden = 0; recount(); refreshRestore();
+  });
+  recount();
+
+  // theme toggle
+  const root = document.documentElement;
+  document.getElementById("themeBtn").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme");
+    const mqDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const showing = cur === "auto" ? (mqDark ? "dark" : "light") : cur;
+    root.setAttribute("data-theme", showing === "dark" ? "light" : "dark");
+  });
+</script>
+</body>
+</html>
