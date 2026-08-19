@@ -30,4 +30,4 @@
 
 ## Backlog（今後検討・現行スコープ外）
 
-- [ ] タスクの担当者を複数選択できるようにする（`assignee_id`単一列からの変更が必要。CLAUDE.mdの「テーブルは2つのみ」方針と合わせて別途検討する）
+- [x] タスクの担当者を複数選択できるようにする（`assignee_id`→`assignee_ids uuid[]`に変更して実装済み。`supabase/migrations/0002_multi_assignee.sql`をSupabase側で実行後に有効化）

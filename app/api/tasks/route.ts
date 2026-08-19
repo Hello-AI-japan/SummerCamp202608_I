@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth/getSessionProfile";
-import type { ApiResponse, CreateTaskInput, TaskWithAssignee } from "@/types/task";
+import { attachAssignees } from "@/lib/tasks/withAssignees";
+import type { ApiResponse, CreateTaskInput, Task, TaskWithAssignee } from "@/types/task";
+
+function parseAssigneeIds(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || !value.every((v) => typeof v === "string")) return null;
+  return [...new Set(value)];
+}
 
 export async function GET() {
   const { supabase, user } = await getSessionProfile();
@@ -12,20 +19,21 @@ export async function GET() {
     );
   }
 
-  const { data, error } = await supabase
-    .from("tasks")
-    .select("*, assignee:profiles!tasks_assignee_id_fkey(id, display_name)")
-    .order("created_at", { ascending: true });
+  const [{ data: tasks, error: tasksError }, { data: profiles, error: profilesError }] =
+    await Promise.all([
+      supabase.from("tasks").select("*").order("created_at", { ascending: true }),
+      supabase.from("profiles").select("id, display_name"),
+    ]);
 
-  if (error) {
+  if (tasksError || profilesError) {
     return NextResponse.json<ApiResponse<null>>(
-      { data: null, error: error.message },
+      { data: null, error: (tasksError ?? profilesError)!.message },
       { status: 500 },
     );
   }
 
   return NextResponse.json<ApiResponse<TaskWithAssignee[]>>({
-    data: data as unknown as TaskWithAssignee[],
+    data: attachAssignees((tasks ?? []) as Task[], profiles ?? []),
     error: null,
   });
 }
@@ -50,16 +58,24 @@ export async function POST(request: Request) {
     );
   }
 
+  const assigneeIds = parseAssigneeIds(body.assignee_ids);
+  if (assigneeIds === null) {
+    return NextResponse.json<ApiResponse<null>>(
+      { data: null, error: "assignee_ids must be an array of strings" },
+      { status: 400 },
+    );
+  }
+
   const { data, error } = await supabase
     .from("tasks")
     .insert({
       title,
       description: body.description ?? null,
-      assignee_id: body.assignee_id ?? null,
+      assignee_ids: assigneeIds,
       due_at: body.due_at ?? null,
       created_by: user.id,
     })
-    .select("*, assignee:profiles!tasks_assignee_id_fkey(id, display_name)")
+    .select("*")
     .single();
 
   if (error) {
@@ -69,8 +85,13 @@ export async function POST(request: Request) {
     );
   }
 
+  const { data: profiles } =
+    assigneeIds.length > 0
+      ? await supabase.from("profiles").select("id, display_name").in("id", assigneeIds)
+      : { data: [] };
+
   return NextResponse.json<ApiResponse<TaskWithAssignee>>(
-    { data: data as unknown as TaskWithAssignee, error: null },
+    { data: attachAssignees([data as Task], profiles ?? [])[0], error: null },
     { status: 201 },
   );
 }

@@ -36,6 +36,11 @@ export function TaskCard({
       }`}
     >
       <p className="mb-1 text-sm font-medium text-gray-900">{task.title}</p>
+      {task.assignees.length > 0 && (
+        <p className="mb-1 text-xs text-gray-500">
+          担当: {task.assignees.map((a) => a.display_name).join("、")}
+        </p>
+      )}
       <p
         className={`mb-2 text-xs ${
           overdue ? "font-semibold text-red-600" : dueToday ? "font-semibold text-amber-600" : "text-gray-500"

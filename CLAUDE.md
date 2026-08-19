@@ -46,9 +46,9 @@ Hello AI! サークルの運営メンバー向けタスク管理アプリ。
 - サインアップ時にトリガーで自動作成する
 
 ### tasks
-`id, title, description, assignee_id, created_by, due_at, status, created_at, updated_at`
+`id, title, description, assignee_ids, created_by, due_at, status, created_at, updated_at`
 - `status`: `todo` | `in_progress` | `done`（default `todo`）
-- `assignee_id` は null 許容（未割当タスク）
+- `assignee_ids` は `uuid[]`。複数担当者に対応し、空配列で未割当を表す
 
 ## 権限設計（最重要・事故が起きやすい箇所）
 

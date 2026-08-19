@@ -13,10 +13,16 @@ export function CreateTaskModal({
   onCreate: (input: CreateTaskInput) => Promise<string | null>;
 }) {
   const [title, setTitle] = useState("");
-  const [assigneeId, setAssigneeId] = useState("");
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [dueAt, setDueAt] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  function toggleAssignee(id: string) {
+    setAssigneeIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,7 +31,7 @@ export function CreateTaskModal({
 
     const error = await onCreate({
       title,
-      assignee_id: assigneeId || null,
+      assignee_ids: assigneeIds,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
     });
 
@@ -56,19 +62,21 @@ export function CreateTaskModal({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">担当者</label>
-            <select
-              value={assigneeId}
-              onChange={(e) => setAssigneeId(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value="">未アサイン</option>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              担当者（複数選択可・未選択で未アサイン）
+            </label>
+            <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border border-gray-300 p-2">
               {members.map((member) => (
-                <option key={member.id} value={member.id}>
+                <label key={member.id} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={assigneeIds.includes(member.id)}
+                    onChange={() => toggleAssignee(member.id)}
+                  />
                   {member.display_name}
-                </option>
+                </label>
               ))}
-            </select>
+            </div>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">期限</label>
