@@ -16,6 +16,7 @@ export interface Task {
   created_by: string | null;
   due_at: string | null;
   status: TaskStatus;
+  estimated_hours: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +35,7 @@ export interface CreateTaskInput {
   description?: string | null;
   assignee_ids?: string[];
   due_at?: string | null;
+  estimated_hours?: number | null;
 }
 
 export interface UpdateTaskInput {

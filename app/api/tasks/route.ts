@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth/getSessionProfile";
 import { attachAssignees } from "@/lib/tasks/withAssignees";
+import { notifyTaskEvent } from "@/lib/notifications/notify";
 import type { ApiResponse, CreateTaskInput, Task, TaskWithAssignee } from "@/types/task";
 
 function parseAssigneeIds(value: unknown): string[] | null {
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
       description: body.description ?? null,
       assignee_ids: assigneeIds,
       due_at: body.due_at ?? null,
+      estimated_hours: body.estimated_hours ?? null,
       created_by: user.id,
     })
     .select("*")
@@ -85,13 +87,16 @@ export async function POST(request: Request) {
     );
   }
 
+  const task = data as Task;
+  await notifyTaskEvent("created", task);
+
   const { data: profiles } =
     assigneeIds.length > 0
       ? await supabase.from("profiles").select("id, display_name").in("id", assigneeIds)
       : { data: [] };
 
   return NextResponse.json<ApiResponse<TaskWithAssignee>>(
-    { data: attachAssignees([data as Task], profiles ?? [])[0], error: null },
+    { data: attachAssignees([task], profiles ?? [])[0], error: null },
     { status: 201 },
   );
 }

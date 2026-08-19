@@ -7,10 +7,11 @@
 - [x] M2: タスク作成時にタイトル・担当者・期限を指定できることを確認する
 - [x] M3: 担当者別ボードでタスクを確認できることを確認する
 - [x] M3: 担当者本人が自分のタスクのステータスを更新できることを確認する
-- [ ] M4: Slack 通知連携を実装する
-- [ ] M5: ガントチャートと工数集計を実装する
-- [ ] M6: 期限切れタスクの赤色ハイライトと期限順ソートを実装する
-- [ ] M7: タスクへのコメント機能を実装する
+- [x] 下準備: `supabase/migrations/0003_m4_m7_schema.sql`（`estimated_hours`列・`task_comments`テーブル）、型定義、通知関数の配線を実装する
+- [ ] M4（Aさん）: `lib/notifications/notify.ts`にSlack Incoming Webhook連携を実装する
+- [ ] M5（Aさん）: `/gantt`ページでガントチャートと工数集計を実装する
+- [ ] M6（Bさん）: `Board.tsx`に期限順ソートを実装する（赤色ハイライトは実装済み）
+- [ ] M7（Bさん）: タスクコメントのAPI（`/api/tasks/:id/comments`, `/api/comments/:id`）とUIを実装する
 
 ## Should
 

@@ -7,7 +7,7 @@
 
 ## 1. DBスキーマ（Supabase / PostgreSQL）
 
-認証は Supabase Auth（`auth.users`）を利用。自前実装しない。テーブルは**2つだけ**。
+認証は Supabase Auth（`auth.users`）を利用。自前実装しない。テーブルは**3つ**（profiles / tasks / task_comments）。
 
 ### profiles（ユーザー情報とロール）
 
@@ -32,8 +32,21 @@
 | created_by | uuid FK → profiles.id | |
 | due_at | timestamptz | null許容 |
 | status | text | `todo` / `in_progress` / `done`、default `todo` |
+| estimated_hours | numeric | null許容。M5の工数集計用 |
 | created_at | timestamptz | default now() |
 | updated_at | timestamptz | |
+
+### task_comments（M7）
+
+| カラム | 型 | 備考 |
+|---|---|---|
+| id | uuid PK | |
+| task_id | uuid FK → tasks.id | on delete cascade |
+| author_id | uuid FK → profiles.id | on delete set null |
+| body | text | NOT NULL |
+| created_at | timestamptz | default now() |
+
+> tasksとは独立したテーブルにしている理由: コメントは「誰でも投稿できるが削除は投稿者本人かadminのみ」という、tasksの行単位ポリシー（admin/担当者のみ更新可）とは別の権限が必要。JSONB埋め込みだとRLSが行単位でしか制御できず、tasksのUPDATE権限自体を緩めることになり既存の権限設計を壊すため、専用テーブル＋専用RLSポリシーにした（CLAUDE.mdの「テーブルは2つのみ」からの唯一の例外）。
 
 ---
 
@@ -45,6 +58,7 @@
 |---|---|---|---|---|
 | tasks | **全員が全件**（要件そのもの） | ログイン済み全員 | adminまたは担当者本人 | adminのみ |
 | profiles | 全員が全件 | トリガーで自動 | 本人の表示名／adminのrole変更 | なし |
+| task_comments | 全員が全件 | ログイン済み全員（`author_id = auth.uid()`のみ） | なし（編集不可） | 投稿者本人またはadmin |
 
 ### 地雷1: 無限再帰
 
@@ -104,6 +118,10 @@ Supabase Authはデフォルトでメール確認が有効です。当日デモ�
 
 - メール＋パスワードのログイン／新規登録タブ切り替えのみ
 
+### `/gantt`（M5、新規・Aさん担当）
+
+- タスクを`due_at`ベースでガントチャート表示、担当者別の`estimated_hours`合計を集計表示
+
 ---
 
 ## 4. API一覧（Next.js Route Handlers）
@@ -115,8 +133,11 @@ Supabase Authはデフォルトでメール確認が有効です。当日デモ�
 | PATCH | `/api/tasks/:id` | ステータス・担当者・期限の更新 | admin / 担当者本人 |
 | DELETE | `/api/tasks/:id` | 削除 | admin |
 | GET | `/api/members` | メンバー一覧（割り当て先の選択肢用） | 全員 |
+| GET | `/api/tasks/:id/comments` | コメント一覧取得（M7） | ログイン済み全員 |
+| POST | `/api/tasks/:id/comments` | コメント投稿（M7、`author_id`はサーバー側で`auth.uid()`固定） | ログイン済み全員 |
+| DELETE | `/api/comments/:id` | コメント削除（M7） | 投稿者本人またはadmin |
 
-計5本。これ以上増やさない。
+M4〜M7分を含めて計8本。Bさんが`/api/tasks/:id/comments`と`/api/comments/:id`を新規実装する（既存5本は変更不要）。
 
 > **UIで隠すだけでは不十分**。「adminのみ」の制御は RLS とAPI側の両方で行う。
 > ここを「二重で防いだ」と説明できると技術評価に効きます。

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth/getSessionProfile";
 import { attachAssignees } from "@/lib/tasks/withAssignees";
+import { notifyTaskEvent } from "@/lib/notifications/notify";
 import type { ApiResponse, Task, TaskWithAssignee, UpdateTaskInput } from "@/types/task";
 
 const STATUS_VALUES = ["todo", "in_progress", "done"];
@@ -100,6 +101,8 @@ export async function PATCH(
   }
 
   const task = data as Task;
+  await notifyTaskEvent("updated", task);
+
   const { data: profiles } =
     task.assignee_ids.length > 0
       ? await supabase.from("profiles").select("id, display_name").in("id", task.assignee_ids)

@@ -41,10 +41,9 @@
 
 ### Could（やらない。スライドの「今後の展望」に書く）
 
-
 - ファイル添付、カテゴリ・タグ管理
 - 3つ目以降のロール（閲覧専用など）
-- Gmail / Googleカレンダー連携によるToDo自動抽出＋AIエージェントによるタスク自動処理（詳細は7章）
+- Gmail / Slack / Googleカレンダーから情報を「取得」してToDoを自動抽出＋AIエージェントによるタスク自動処理（詳細は7章。M4のSlack「通知（送信）」とは向きが逆の話）
 
 ---
 
@@ -117,6 +116,17 @@
 
 ### なぜ今回はやらないか
 
-- Gmail / Slack / Googleカレンダーそれぞれの外部API認証（OAuth）が必要で、認証設計だけでハッカソンの持ち時間を大きく消費する
+- Gmail / Slack / Googleカレンダーそれぞれの外部API認証（OAuth）が必要で、認証設計だけで持ち時間を大きく消費する
 - 「AIエージェントがタスクを代行処理する」部分はスコープが際限なく広がりやすく、Mustの完走を脅かす
-- CLAUDE.mdの明示的禁止事項（Slack通知・メール通知・リアルタイム同期）と重なる領域であり、既存の権限設計（RLS・admin/member）にも影響が及ぶため、今回のデータモデル（`profiles`/`tasks`の2テーブルのみ、詳細設計1章）を拡張せずに済む範囲に留める
+- CLAUDE.mdの明示的禁止事項（メール通知・リアルタイム同期）と重なる領域であり、既存の権限設計（RLS・admin/member）にも影響が及ぶため、現在のデータモデル（詳細設計1章）を拡張せずに済む範囲に留める
+
+---
+
+## 8. M4〜M7 役割分担（並行開発フェーズ）
+
+| | Aさん | Bさん |
+|---|---|---|
+| 担当機能 | M4 Slack通知連携／M5 ガントチャート・工数集計 | M6 期限順ソート（赤色ハイライトは実装済み）／M7 タスクコメント |
+| 主なファイル | `lib/notifications/notify.ts`、`app/gantt/*`、`components/gantt/*`、`components/board/CreateTaskModal.tsx` | `components/board/Board.tsx`、`components/board/TaskCard.tsx`、`app/api/tasks/[id]/comments/*`、`components/board/Comment*.tsx` |
+
+共通の下準備（マイグレーション`0003_m4_m7_schema.sql`、型定義、通知関数の配線）は事前にmainへマージ済み。ファイル所有権の詳細と「一覧にないファイルを触る場合の運用」は [`docs/parallel-work-guide.md`](./docs/parallel-work-guide.md) を参照。
