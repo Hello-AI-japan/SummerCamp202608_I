@@ -23,11 +23,12 @@ Supabase側で`0003_m4_m7_schema.sql`をSQL Editorで実行してから作業を
 - `components/gantt/*.tsx`（新規）
 - `components/board/CreateTaskModal.tsx` — 見積工数（`estimated_hours`）の入力欄を追加
 
-## Bさんの担当（M6: 期限順ソート／M7: タスクコメント）
+## Bさんの担当（M6: 期限順ソート／M7: タスクコメント）— 実装済み
 
-所有ファイル（新規作成・編集とも、Bさんだけが触る）:
+Claudeが代わりに実装済み。所有ファイル:
 
-- `components/board/Board.tsx` — 期限順ソートのトグルを追加（赤色ハイライトは実装済みのため対応不要）
+- `components/board/Board.tsx` — 期限順ソートのトグルを追加（赤色ハイライトは実装済みのため対応不要）。各セクションへ`currentUser`を渡す配線も追加
+- `components/board/MyTasksSection.tsx` / `MemberSection.tsx` / `UnassignedSection.tsx` — `currentUser`を受け取り`TaskCard`へ素通し（コメントの削除可否判定に使用）
 - `components/board/TaskCard.tsx` — コメント欄の表示/開閉トリガーを追加
 - `app/api/tasks/[id]/comments/route.ts`（新規、GET/POST）
 - `app/api/comments/[commentId]/route.ts`（新規、DELETE）

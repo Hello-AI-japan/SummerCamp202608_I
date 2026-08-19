@@ -2,14 +2,16 @@
 -- Supabaseダッシュボード > SQL Editor に貼り付けて実行してください。
 -- 前提: 0001_init.sql, 0002_multi_assignee.sql が実行済みであること。
 
+-- このファイルは再実行しても安全なように IF NOT EXISTS / DROP POLICY IF EXISTS で書いている。
+
 -- 1. M5: 工数集計用の見積工数列
-alter table public.tasks add column estimated_hours numeric;
+alter table public.tasks add column if not exists estimated_hours numeric;
 
 -- 2. M7: タスクコメント（独立テーブル）
 -- コメントは「誰でも投稿できるが、削除は投稿者本人かadminのみ」という、
 -- tasksの行単位ポリシー（admin/担当者のみ更新可）とは独立した権限が必要なため、
 -- JSONB埋め込みではなく専用テーブルにする（CLAUDE.mdの「テーブルは2つのみ」の例外）。
-create table public.task_comments (
+create table if not exists public.task_comments (
   id uuid primary key default gen_random_uuid(),
   task_id uuid not null references public.tasks(id) on delete cascade,
   author_id uuid references public.profiles(id) on delete set null,
@@ -17,20 +19,23 @@ create table public.task_comments (
   created_at timestamptz not null default now()
 );
 
-create index task_comments_task_id_idx on public.task_comments (task_id);
+create index if not exists task_comments_task_id_idx on public.task_comments (task_id);
 
 alter table public.task_comments enable row level security;
 
+drop policy if exists "task_comments_select_all" on public.task_comments;
 create policy "task_comments_select_all"
 on public.task_comments for select
 to authenticated
 using (true);
 
+drop policy if exists "task_comments_insert_logged_in" on public.task_comments;
 create policy "task_comments_insert_logged_in"
 on public.task_comments for insert
 to authenticated
 with check (author_id = auth.uid());
 
+drop policy if exists "task_comments_delete_author_or_admin" on public.task_comments;
 create policy "task_comments_delete_author_or_admin"
 on public.task_comments for delete
 to authenticated

@@ -1,15 +1,17 @@
-import type { TaskStatus, TaskWithAssignee } from "@/types/task";
+import type { Role, TaskStatus, TaskWithAssignee } from "@/types/task";
 import { TaskCard } from "./TaskCard";
 
 export function MemberSection({
   memberName,
   tasks,
   canEdit,
+  currentUser,
   onStatusChange,
 }: {
   memberName: string;
   tasks: TaskWithAssignee[];
   canEdit: boolean;
+  currentUser: { id: string; role: Role };
   onStatusChange: (taskId: string, status: TaskStatus) => void;
 }) {
   return (
@@ -24,6 +26,7 @@ export function MemberSection({
               key={task.id}
               task={task}
               canEdit={canEdit}
+              currentUser={currentUser}
               onStatusChange={(status) => onStatusChange(task.id, status)}
             />
           ))}
