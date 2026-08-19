@@ -26,6 +26,10 @@ M5は実装済み（`m5`ブランチ）。M4は`lib/notifications/notify.ts`が�
 - `components/board/CreateTaskModal.tsx` — 見積工数（`estimated_hours`）の入力欄を追加（実装済み）
 - `components/layout/Header.tsx` — ボード⇄ガントチャートのナビゲーションリンクを追加（実装済み。当初のファイル一覧には無かったが、M5実装に伴い追加）
 
+### ⚠ M5ブランチの分岐について
+
+Aさんが個人的に`origin/m5`ブランチで独自にM5（`start_at`列＋`TaskScheduleView.tsx`）を実装しており、こちらの`m5`/`feature/m5-gantt-created-at`ブランチと並行して存在していた。`origin/m5`は multi-assignee 対応前の古い`main`から分岐しており、`assignee_id`（単数）前提でデータモデルが非互換だったため、`git merge`はせず**`origin/m5`の`start_at`という設計アイデアだけを`feature/m5-gantt-created-at`側に移植**する形で統合した（`supabase/migrations/0004_task_start_at.sql`）。`origin/m5`ブランチ自体は変更していない。**今後M5関連の作業は`feature/m5-gantt-created-at`をベースにすること。**
+
 ## Bさんの担当（M6: 期限順ソート／M7: タスクコメント）
 
 所有ファイル（新規作成・編集とも、Bさんだけが触る）:

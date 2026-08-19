@@ -27,7 +27,7 @@ export async function PATCH(
 
   const { data: existing, error: fetchError } = await supabase
     .from("tasks")
-    .select("id, assignee_ids")
+    .select("id, assignee_ids, start_at, due_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -57,9 +57,12 @@ export async function PATCH(
 
   const body = (await request.json()) as UpdateTaskInput;
 
-  if (!isAdmin && ("assignee_ids" in body || "due_at" in body)) {
+  if (
+    !isAdmin &&
+    ("assignee_ids" in body || "start_at" in body || "due_at" in body || "estimated_hours" in body)
+  ) {
     return NextResponse.json<ApiResponse<null>>(
-      { data: null, error: "only admin can change assignees or due date" },
+      { data: null, error: "only admin can change assignees, schedule, or estimated hours" },
       { status: 403 },
     );
   }
@@ -67,6 +70,25 @@ export async function PATCH(
   if (body.status !== undefined && !STATUS_VALUES.includes(body.status)) {
     return NextResponse.json<ApiResponse<null>>(
       { data: null, error: "invalid status" },
+      { status: 400 },
+    );
+  }
+
+  const effectiveStartAt = body.start_at !== undefined ? body.start_at : existing.start_at;
+  const effectiveDueAt = body.due_at !== undefined ? body.due_at : existing.due_at;
+  const effectiveStartTime = effectiveStartAt ? new Date(effectiveStartAt).getTime() : null;
+  const effectiveDueTime = effectiveDueAt ? new Date(effectiveDueAt).getTime() : null;
+
+  if (
+    (body.estimated_hours !== undefined &&
+      body.estimated_hours !== null &&
+      (!Number.isFinite(body.estimated_hours) || body.estimated_hours < 0)) ||
+    (effectiveStartAt !== null && (effectiveStartTime === null || !Number.isFinite(effectiveStartTime))) ||
+    (effectiveDueAt !== null && (effectiveDueTime === null || !Number.isFinite(effectiveDueTime))) ||
+    (effectiveStartTime !== null && effectiveDueTime !== null && effectiveStartTime > effectiveDueTime)
+  ) {
+    return NextResponse.json<ApiResponse<null>>(
+      { data: null, error: "invalid task schedule or estimated hours" },
       { status: 400 },
     );
   }
@@ -84,7 +106,9 @@ export async function PATCH(
     }
     updateFields.assignee_ids = assigneeIds;
   }
+  if (isAdmin && body.start_at !== undefined) updateFields.start_at = body.start_at;
   if (isAdmin && body.due_at !== undefined) updateFields.due_at = body.due_at;
+  if (isAdmin && body.estimated_hours !== undefined) updateFields.estimated_hours = body.estimated_hours;
 
   const { data, error } = await supabase
     .from("tasks")

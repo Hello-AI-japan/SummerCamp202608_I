@@ -30,6 +30,7 @@
 | description | text | |
 | assignee_ids | uuid[] | 複数担当者。空配列で未割当（DBレベルのFK制約は配列要素には張れないため参照整合性はアプリ層で担保） |
 | created_by | uuid FK → profiles.id | |
+| start_at | timestamptz | null許容。M5のガントチャート開始日（未設定タスクは`created_at`で代用表示） |
 | due_at | timestamptz | null許容 |
 | status | text | `todo` / `in_progress` / `done`、default `todo` |
 | estimated_hours | numeric | null許容。M5の工数集計用 |

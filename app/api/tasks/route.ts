@@ -67,13 +67,33 @@ export async function POST(request: Request) {
     );
   }
 
+  const startAt = body.start_at ?? null;
+  const dueAt = body.due_at ?? null;
+  const startTime = startAt ? new Date(startAt).getTime() : null;
+  const dueTime = dueAt ? new Date(dueAt).getTime() : null;
+
+  if (
+    (body.estimated_hours !== undefined &&
+      body.estimated_hours !== null &&
+      (!Number.isFinite(body.estimated_hours) || body.estimated_hours < 0)) ||
+    (startAt !== null && (startTime === null || !Number.isFinite(startTime))) ||
+    (dueAt !== null && (dueTime === null || !Number.isFinite(dueTime))) ||
+    (startTime !== null && dueTime !== null && startTime > dueTime)
+  ) {
+    return NextResponse.json<ApiResponse<null>>(
+      { data: null, error: "invalid task schedule or estimated hours" },
+      { status: 400 },
+    );
+  }
+
   const { data, error } = await supabase
     .from("tasks")
     .insert({
       title,
       description: body.description ?? null,
       assignee_ids: assigneeIds,
-      due_at: body.due_at ?? null,
+      start_at: startAt,
+      due_at: dueAt,
       estimated_hours: body.estimated_hours ?? null,
       created_by: user.id,
     })

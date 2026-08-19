@@ -52,9 +52,10 @@ M4〜M7は`docs/parallel-work-guide.md`のファイル所有権に従って並�
 - サインアップ時にトリガーで自動作成する
 
 ### tasks
-`id, title, description, assignee_ids, created_by, due_at, status, estimated_hours, created_at, updated_at`
+`id, title, description, assignee_ids, created_by, start_at, due_at, status, estimated_hours, created_at, updated_at`
 - `status`: `todo` | `in_progress` | `done`（default `todo`）
 - `assignee_ids` は `uuid[]`。複数担当者に対応し、空配列で未割当を表す
+- `start_at`（M5ガントチャートの開始日、null許容。未設定タスクは`created_at`で代用表示）
 - `estimated_hours`（M5工数集計用、null許容）
 
 ### task_comments

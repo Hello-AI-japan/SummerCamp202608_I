@@ -14,6 +14,7 @@ export function CreateTaskModal({
 }) {
   const [title, setTitle] = useState("");
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
+  const [startAt, setStartAt] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [estimatedHours, setEstimatedHours] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -33,6 +34,7 @@ export function CreateTaskModal({
     const error = await onCreate({
       title,
       assignee_ids: assigneeIds,
+      start_at: startAt ? new Date(startAt).toISOString() : null,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
       estimated_hours: estimatedHours ? Number(estimatedHours) : null,
     });
@@ -79,6 +81,15 @@ export function CreateTaskModal({
                 </label>
               ))}
             </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">開始日（任意）</label>
+            <input
+              type="date"
+              value={startAt}
+              onChange={(e) => setStartAt(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">期限</label>

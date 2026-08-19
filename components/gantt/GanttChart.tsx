@@ -10,10 +10,15 @@ function clampPct(value: number) {
   return Math.min(100, Math.max(0, value));
 }
 
+// start_at が未設定の（既存）タスクは created_at を開始日の代わりに使う
+function barStartOf(task: TaskWithAssignee) {
+  return task.start_at ?? task.created_at;
+}
+
 export function GanttChart({ tasks }: { tasks: TaskWithAssignee[] }) {
   const plottable = tasks
     .filter((t) => t.due_at !== null)
-    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    .sort((a, b) => new Date(barStartOf(a)).getTime() - new Date(barStartOf(b)).getTime());
 
   const unscheduledCount = tasks.length - plottable.length;
 
@@ -28,10 +33,10 @@ export function GanttChart({ tasks }: { tasks: TaskWithAssignee[] }) {
     );
   }
 
-  const createdTimes = plottable.map((t) => new Date(t.created_at).getTime());
+  const barStartTimes = plottable.map((t) => new Date(barStartOf(t)).getTime());
   const dueTimes = plottable.map((t) => new Date(t.due_at!).getTime());
-  const startMs = Math.min(...createdTimes, ...dueTimes);
-  const endMs = Math.max(...createdTimes, ...dueTimes);
+  const startMs = Math.min(...barStartTimes, ...dueTimes);
+  const endMs = Math.max(...barStartTimes, ...dueTimes);
   const totalMs = Math.max(endMs - startMs, 1);
 
   return (
@@ -43,10 +48,10 @@ export function GanttChart({ tasks }: { tasks: TaskWithAssignee[] }) {
 
       <div className="space-y-2">
         {plottable.map((task) => {
-          const createdPct = clampPct(((new Date(task.created_at).getTime() - startMs) / totalMs) * 100);
+          const startPct = clampPct(((new Date(barStartOf(task)).getTime() - startMs) / totalMs) * 100);
           const duePct = clampPct(((new Date(task.due_at!).getTime() - startMs) / totalMs) * 100);
-          const left = Math.min(createdPct, duePct);
-          const width = Math.max(Math.abs(duePct - createdPct), 1.5);
+          const left = Math.min(startPct, duePct);
+          const width = Math.max(Math.abs(duePct - startPct), 1.5);
 
           return (
             <div key={task.id} className="flex items-center gap-3">

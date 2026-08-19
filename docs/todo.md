@@ -10,6 +10,7 @@
 - [x] 下準備: `supabase/migrations/0003_m4_m7_schema.sql`（`estimated_hours`列・`task_comments`テーブル）、型定義、通知関数の配線を実装する
 - [ ] M4（Aさん）: `lib/notifications/notify.ts`にSlack Incoming Webhook連携を実装する
 - [x] M5（Aさん）: `/gantt`ページでガントチャートと工数集計を実装する
+- [x] M5統合: チームメイトの`origin/m5`（`start_at`列）のアイデアを`feature/m5-gantt-created-at`に取り込み、`supabase/migrations/0004_task_start_at.sql`として追加
 - [ ] M6（Bさん）: `Board.tsx`に期限順ソートを実装する（赤色ハイライトは実装済み）
 - [ ] M7（Bさん）: タスクコメントのAPI（`/api/tasks/:id/comments`, `/api/comments/:id`）とUIを実装する
 
@@ -58,6 +59,7 @@
 - [ ] ブラウザのコンソールエラーがないことを確認する
 - [ ] `npm run build` が成功することを確認する
 - [ ] `/gantt`でタスクのバーと担当者別の見積工数合計が表示されることを確認する
+- [ ] 開始日 > 期限でタスクを作成・更新しようとするとエラーになることを確認する
 
 ## Backlog（今後検討・現行スコープ外）
 
