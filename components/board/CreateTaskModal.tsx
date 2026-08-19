@@ -15,6 +15,7 @@ export function CreateTaskModal({
   const [title, setTitle] = useState("");
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [dueAt, setDueAt] = useState("");
+  const [estimatedHours, setEstimatedHours] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -33,6 +34,7 @@ export function CreateTaskModal({
       title,
       assignee_ids: assigneeIds,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
+      estimated_hours: estimatedHours ? Number(estimatedHours) : null,
     });
 
     setSubmitting(false);
@@ -84,6 +86,17 @@ export function CreateTaskModal({
               type="date"
               value={dueAt}
               onChange={(e) => setDueAt(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">見積工数（時間・任意）</label>
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              value={estimatedHours}
+              onChange={(e) => setEstimatedHours(e.target.value)}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             />
           </div>

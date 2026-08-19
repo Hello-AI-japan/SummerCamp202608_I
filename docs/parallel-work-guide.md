@@ -16,12 +16,15 @@ Supabase側で`0003_m4_m7_schema.sql`をSQL Editorで実行してから作業を
 
 ## Aさんの担当（M4: Slack通知連携／M5: ガントチャート・工数集計）
 
+M5は実装済み（`m5`ブランチ）。M4は`lib/notifications/notify.ts`がまだno-opスタブのまま未実装。
+
 所有ファイル（新規作成・編集とも、Aさんだけが触る）:
 
-- `lib/notifications/notify.ts` — Slack Incoming Webhookへのfetch実装（`SLACK_WEBHOOK_URL`を使う）
-- `app/gantt/page.tsx`（新規）
-- `components/gantt/*.tsx`（新規）
-- `components/board/CreateTaskModal.tsx` — 見積工数（`estimated_hours`）の入力欄を追加
+- `lib/notifications/notify.ts` — Slack Incoming Webhookへのfetch実装（`SLACK_WEBHOOK_URL`を使う）※未実装
+- `app/gantt/page.tsx`（新規・実装済み）
+- `components/gantt/GanttChart.tsx`／`components/gantt/EffortSummary.tsx`（新規・実装済み）
+- `components/board/CreateTaskModal.tsx` — 見積工数（`estimated_hours`）の入力欄を追加（実装済み）
+- `components/layout/Header.tsx` — ボード⇄ガントチャートのナビゲーションリンクを追加（実装済み。当初のファイル一覧には無かったが、M5実装に伴い追加）
 
 ## Bさんの担当（M6: 期限順ソート／M7: タスクコメント）
 

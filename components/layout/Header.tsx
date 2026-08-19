@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Role } from "@/types/task";
@@ -22,7 +23,17 @@ export function Header({
 
   return (
     <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-      <h1 className="text-lg font-bold text-gray-900">HelloBoard</h1>
+      <div className="flex items-center gap-6">
+        <h1 className="text-lg font-bold text-gray-900">HelloBoard</h1>
+        <nav className="flex items-center gap-4 text-sm text-gray-600">
+          <Link href="/" className="hover:text-gray-900">
+            ボード
+          </Link>
+          <Link href="/gantt" className="hover:text-gray-900">
+            ガントチャート
+          </Link>
+        </nav>
+      </div>
       <div className="flex items-center gap-3 text-sm text-gray-600">
         <span>
           {displayName}

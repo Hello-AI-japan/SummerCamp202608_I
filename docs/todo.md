@@ -9,7 +9,7 @@
 - [x] M3: 担当者本人が自分のタスクのステータスを更新できることを確認する
 - [x] 下準備: `supabase/migrations/0003_m4_m7_schema.sql`（`estimated_hours`列・`task_comments`テーブル）、型定義、通知関数の配線を実装する
 - [ ] M4（Aさん）: `lib/notifications/notify.ts`にSlack Incoming Webhook連携を実装する
-- [ ] M5（Aさん）: `/gantt`ページでガントチャートと工数集計を実装する
+- [x] M5（Aさん）: `/gantt`ページでガントチャートと工数集計を実装する
 - [ ] M6（Bさん）: `Board.tsx`に期限順ソートを実装する（赤色ハイライトは実装済み）
 - [ ] M7（Bさん）: タスクコメントのAPI（`/api/tasks/:id/comments`, `/api/comments/:id`）とUIを実装する
 
@@ -57,6 +57,7 @@
 - [ ] admin でタスクを削除できることを確認する
 - [ ] ブラウザのコンソールエラーがないことを確認する
 - [ ] `npm run build` が成功することを確認する
+- [ ] `/gantt`でタスクのバーと担当者別の見積工数合計が表示されることを確認する
 
 ## Backlog（今後検討・現行スコープ外）
 
